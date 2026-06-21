@@ -34,10 +34,6 @@ def skip_ngrok_warning(response):
     response.headers["ngrok-skip-browser-warning"] = "true"
     return response
 
-@app.route("/favicon.ico")
-def favicon():
-    return "", 204
-
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWIML_APP_SID = os.getenv("TWILIO_TWIML_APP_SID")
@@ -49,7 +45,8 @@ current_session = {}
 
 @app.route("/")
 def index():
-    with open(os.path.join(BASE_DIR, "index.html"), encoding="utf-8") as file:
+    parent_dir = os.path.dirname(BASE_DIR)
+    with open(os.path.join(parent_dir, "index.html"), encoding="utf-8") as file:
         return file.read()
 
 @app.route("/favicon.ico")
