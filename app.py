@@ -52,6 +52,10 @@ def index():
     with open(os.path.join(BASE_DIR, "index.html"), encoding="utf-8") as file:
         return file.read()
 
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
+
 @app.route("/token", methods=["GET"])
 def token():
     missing = _required_env(
