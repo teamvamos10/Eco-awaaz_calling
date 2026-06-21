@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco Awaaz - IVR Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.3.0/dist/twilio.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --green-dark: #07090b;   /* Pitch dark phone screen */
+            --green-mid: #0a3a28;    /* Brand forest green */
+            --green-accent: #10b981; /* Brand emerald glow */
+            --green-light: #34d399;  /* Neon mint */
+            --cream: #f8fafc;
+            --slate-dark: #0f172a;
+            --slate-muted: #475569;
+
+            /* Page Canvas Gradient */
+            --bg-page: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
+            --blob-1-color: rgba(16, 185, 129, 0.08); /* Pastel Emerald */
+            --blob-2-color: rgba(5, 150, 105, 0.06);  /* Pastel Forest */
+            --blob-3-color: rgba(59, 130, 246, 0.06);  /* Pastel Blue */
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-page);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Background Blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .blob-1 {
+            width: 700px;
+            height: 700px;
+            background: var(--blob-1-color);
+            top: -250px;
+            left: -200px;
+            animation: drift 22s ease-in-out infinite alternate;
+        }
+
+        .blob-2 {
+            width: 600px;
+            height: 600px;
+            background: var(--blob-2-color);
+            bottom: -200px;
+            right: -150px;
+            animation: drift 18s ease-in-out infinite alternate-reverse;
+        }
+
+        .blob-3 {
+            width: 500px;
+            height: 500px;
+            background: var(--blob-3-color);
+            top: 30%;
+            left: 50%;
+            animation: drift 28s ease-in-out infinite alternate;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(80px, 40px) scale(1.1);
+            }
+        }
+
+        /* Dashboard Responsive Grid Container */
+        .dashboard-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1100px;
+            width: 100%;
+            gap: 60px;
+            margin: 0 auto;
+        }
+
+        /* LEFT COLUMN: Project Branding & Info */
+        .branding-panel {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .brand-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .branding-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 46px;
+            font-weight: 800;
+            color: var(--slate-dark);
+            letter-spacing: -1.5px;
+            line-height: 1.05;
+        }
+
+        .branding-title span {
+            color: var(--green-accent);
+        }
+
+        .branding-subtitle {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--green-mid);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+        }
+
+        .branding-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--slate-muted);
+        }
+
+        /* Feature Cards Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 16px;
+            padding: 18px 16px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -5px rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .feature-icon {
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .feature-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--slate-dark);
+            margin-bottom: 6px;
+        }
+
+        .feature-text {
+            font-size: 11px;
+            color: var(--slate-muted);
+            line-height: 1.45;
+        }
+
+        /* Statistics counters */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(226, 232, 240, 0.7);
+            border-radius: 16px;
+            padding: 14px 12px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--green-accent);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--slate-muted);
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* RIGHT COLUMN: Interactive Smartphone Simulator */
+        .simulator-panel {
+            flex: 0.8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .phone-wrapper {
+            position: relative;
+            width: 370px;
+            height: 760px;
+            animation: rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .phone-frame {
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            border-radius: 46px;
+            padding: 11px; /* Bezel size */
+            box-shadow: 0 30px 65px -10px rgba(15, 23, 42, 0.25),
+                        0 0 0 1px rgba(0, 0, 0, 0.1),
+                        inset 0 0 4px 2px rgba(255, 255, 255, 0.25);
+            position: relative;
+            border: 4px solid #27272a;
+        }
+
+        /* Phone side buttons */
+        .phone-side-buttons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .phone-button {
+            position: absolute;
+            background: #3f3f46;
+            width: 3px;
+            border-radius: 2px;
+        }
+
+        .volume-up {
+            top: 135px;
+            left: -7px;
+            height: 42px;
+        }
+
+        .volume-down {
+            top: 190px;
+            left: -7px;
+            height: 42px;
+        }
+
+        .power {
+            top: 165px;
+            right: -7px;
+            height: 65px;
+        }
+
+        /* Screen Inner */
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--green-dark);
+            border-radius: 36px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Top phone status bar */
+        .phone-header {
+            height: 40px;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #ffffff;
+            font-weight: 500;
+            z-index: 20;
+            user-select: none;
+            background: var(--green-dark);
+        }
+
+        .dynamic-island {
+            width: 96px;
+            height: 24px;
+            background: #000000;
+            border-radius: 18px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 9px;
+        }
+
+        .camera-lens {
+            width: 8px;
+            height: 8px;
+            background: #18181b;
+            border-radius: 50%;
+            border: 1px solid #27272a;
+        }
+
+        .phone-time {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+        }
+
+        .phone-status-icons {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            opacity: 0.85;
+        }
+
+        /* Phone App Content (Scrollable) */
+        .phone-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 18px 64px 18px;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+
+        .phone-content::-webkit-scrollbar {
+            display: none; /* Hide scrollbar Webkit */
+        }
+
+        /* Live Indicator Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 100px;
+            padding: 4px 11px;
+            margin-bottom: 10px;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green-accent);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+        }
+
+        .badge-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--green-accent);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .phone-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.1;
+            margin-bottom: 3px;
+        }
+
+        .phone-brand span {
+            color: var(--green-accent);
+        }
+
+        .phone-tagline {
+            font-size: 11px;
+            color: #71717a;
+            letter-spacing: 0.1px;
+            margin-bottom: 16px;
+        }
+
+        /* Status panel */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 9px 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .status-bar.active {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .status-icon {
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        #status {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.65);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Sound waveform animation */
+        .wave-container {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 24px;
+            margin: 8px 0 14px 0;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 100%;
+            background: var(--green-accent);
+            border-radius: 3px;
+            animation: wave-bounce 1s ease-in-out infinite alternate;
+        }
+
+        .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.25s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.15s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.3s; }
+
+        @keyframes wave-bounce {
+            0% {
+                transform: scaleY(0.2);
+            }
+            100% {
+                transform: scaleY(1);
+            }
+        }
+
+        /* Dial Display */
+        #dialDisplay {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 9px 12px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--green-accent);
+            letter-spacing: 4px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            word-break: break-all;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+        }
+
+        /* Call Buttons */
+        .btn-container {
+            margin-bottom: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.97) !important;
+        }
+
+        #callBtn {
+            background: linear-gradient(135deg, var(--green-mid), var(--green-accent));
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        #callBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.28);
+        }
+
+        #hangupBtn {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            display: none;
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.1);
+        }
+
+        #hangupBtn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(239, 68, 68, 0.25);
+        }
+
+        /* Keypad divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .divider-text {
+            font-size: 8px;
+            color: #71717a;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Keypad */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            justify-items: center;
+            margin-bottom: 16px;
+        }
+
+        .key {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key:hover {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--green-accent);
+            transform: scale(1.08);
+        }
+
+        .key:active {
+            transform: scale(0.92);
+            background: rgba(16, 185, 129, 0.22);
+        }
+
+        .key-zero {
+            grid-column: 2;
+        }
+
+        /* Flow Guide / Legend */
+        .legend {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            padding: 11px 12px;
+            margin-bottom: 10px;
+        }
+
+        .legend-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--green-accent);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .legend-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .legend-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.35;
+        }
+
+        .legend-num {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.22);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+            color: var(--green-accent);
+        }
+
+        .legend-keys {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 3px;
+        }
+
+        .legend-key {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-family: 'Syne', sans-serif;
+            font-size: 8px;
+            font-weight: 600;
+            color: var(--green-light);
+        }
+
+        /* Bottom Phone Screen Home Indicator */
+        .home-indicator-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to top, var(--green-dark) 40%, transparent);
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .home-indicator {
+            width: 110px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .phone-footer {
+            text-align: center;
+            font-size: 9px;
+            color: rgba(156, 163, 175, 0.25);
+            margin-top: 4px;
+        }
+
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-width: 991px) {
+            body {
+                overflow-y: auto;
+                height: auto;
+                padding: 40px 16px;
+            }
+
+            .dashboard-container {
+                flex-direction: column;
+                gap: 40px;
+                align-items: center;
+                text-align: center;
+            }
+
+            .branding-panel {
+                align-items: center;
+                text-align: center;
+            }
+
+            .brand-logo-container {
+                justify-content: center;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+                width: 100%;
+                max-width: 480px;
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(3, 1fr);
+                width: 100%;
+                max-width: 480px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Light Page Background Animated Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Dashboard Main Layout -->
+    <div class="dashboard-container">
+
+        <!-- LEFT COLUMN: Branding & Description Panel -->
+        <div class="branding-panel">
+            <div class="brand-header">
+                <div class="brand-logo-container">
+                    <!-- Custom Leaf + Voice Wave SVG Logo -->
+                    <svg width="50" height="50" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Leaf Shape -->
+                        <path d="M32 8C32 8 16 20 16 36C16 46.8 24.8 54 32 54C39.2 54 48 46.8 48 36C48 20 32 8 32 8Z" fill="rgba(16, 185, 129, 0.12)" stroke="#10b981" stroke-width="3" stroke-linejoin="round"/>
+                        <!-- Leaf Rib -->
+                        <path d="M32 18V48" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+                        <!-- Voice Waves inside Leaf -->
+                        <path d="M24 34C24 29.5 27.5 26 32 26" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M40 38C40 42.5 36.5 46 32 46" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                    <span class="branding-subtitle">Citizen Portal</span>
+                </div>
+                <h1 class="branding-title">Eco <span>Awaaz</span></h1>
+            </div>
+
+            <p class="branding-desc">
+                An automated citizen voice platform bridging the gap between local residents and municipal departments. Use the softphone simulation on the right to navigate notices, test digit keypad selections, or report infrastructure complaints directly to our virtual hotline.
+            </p>
+
+            <!-- Feature Info Cards -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <!-- Water Droplet SVG Icon -->
+                    <svg class="feature-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                    <h3 class="feature-title">Water Grid</h3>
+                    <p class="feature-text">Report water cuts, leaking pipelines, and low pressure areas.</p>
+                </div>
+                <div class="feature-card">
+                    <!-- Lightning Bolt SVG Icon -->
+                    <svg class="feature-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <h3 class="feature-title">Electricity</h3>
+                    <p class="feature-text">Register power cuts, street light outages, or transformer risks.</p>
+                </div>
+                <div class="feature-card">
+                    <!-- Trash Can SVG Icon -->
+                    <svg class="feature-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <h3 class="feature-title">Sanitation</h3>
+                    <p class="feature-text">Log garbage dumping, blocked sewer channels, or collection delays.</p>
+                </div>
+            </div>
+
+            <!-- Stats section -->
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">Active Hotline</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">98.4%</div>
+                    <div class="stat-label">Response Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">12.5k</div>
+                    <div class="stat-label">Reports Logged</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Interactive Smartphone Softphone -->
+        <div class="simulator-panel">
+            <div class="phone-wrapper">
+                <!-- Physical Side Button mock details -->
+                <div class="phone-side-buttons">
+                    <div class="phone-button volume-up"></div>
+                    <div class="phone-button volume-down"></div>
+                    <div class="phone-button power"></div>
+                </div>
+
+                <div class="phone-frame">
+                    <div class="phone-screen">
+                        <!-- Simulated Smartphone Status Bar -->
+                        <div class="phone-header">
+                            <div class="phone-time" id="mockTime">12:00</div>
+                            <div class="dynamic-island">
+                                <div class="camera-lens"></div>
+                            </div>
+                            <div class="phone-status-icons">
+                                <span>📶</span>
+                                <span>5G</span>
+                                <span>🔋 88%</span>
+                            </div>
+                        </div>
+
+                        <!-- Phone Content (Scrollable softphone screen) -->
+                        <div class="phone-content">
+                            <div class="badge">
+                                <div class="badge-dot"></div>
+                                <span class="badge-label">Simulator</span>
+                            </div>
+
+                            <div class="phone-brand">Eco <span>Awaaz</span></div>
+                            <div class="phone-tagline">Community Voice Hotline</div>
+
+                            <!-- Live Call status bar -->
+                            <div class="status-bar" id="statusBar">
+                                <span class="status-icon" id="statusIcon">📡</span>
+                                <span id="status">Press Call to connect.</span>
+                            </div>
+
+                            <!-- Voice Waveform (displays on active call) -->
+                            <div class="wave-container" id="waveContainer">
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                            </div>
+
+                            <!-- Digital Display of dialed numbers -->
+                            <div id="dialDisplay"></div>
+
+                            <!-- Hotline Calling Buttons -->
+                            <div class="btn-container">
+                                <button class="btn" id="callBtn" onclick="makeCall()">
+                                    <span>📞</span> Call Eco Awaaz IVR
+                                </button>
+                                <button class="btn" id="hangupBtn" onclick="hangUp()">
+                                    <span>📵</span> End Call
+                                </button>
+                            </div>
+
+                            <div class="divider">
+                                <div class="divider-line"></div>
+                                <span class="divider-text">Keypad</span>
+                                <div class="divider-line"></div>
+                            </div>
+
+                            <!-- Dialing Keypad -->
+                            <div class="keypad">
+                                <button class="key" onclick="sendDigit('1')">1</button>
+                                <button class="key" onclick="sendDigit('2')">2</button>
+                                <button class="key" onclick="sendDigit('3')">3</button>
+                                <button class="key" onclick="sendDigit('4')">4</button>
+                                <button class="key" onclick="sendDigit('5')">5</button>
+                                <button class="key" onclick="sendDigit('6')">6</button>
+                                <button class="key" onclick="sendDigit('7')">7</button>
+                                <button class="key" onclick="sendDigit('8')">8</button>
+                                <button class="key" onclick="sendDigit('9')">9</button>
+                                <button class="key key-zero" onclick="sendDigit('0')">0</button>
+                            </div>
+
+                            <!-- Hotline Guide/Legend -->
+                            <div class="legend">
+                                <div class="legend-title">📋 Call Flow Guide</div>
+                                <div class="legend-steps">
+                                    <div class="legend-step">
+                                        <div class="legend-num">1</div>
+                                        <div>Enter your <strong style="color:#ffffff">6-digit PIN</strong> code</div>
+                                    </div>
+                                    <div class="legend-step">
+                                        <div class="legend-num">2</div>
+                                        <div>Say your <strong style="color:#ffffff">street / landmark</strong></div>
+                                    </div>
+                                    <div class="legend-step">
+                                        <div class="legend-num">3</div>
+                                        <div>
+                                            Choose department
+                                            <div class="legend-keys">
+                                                <span class="legend-key">1 Water</span>
+                                                <span class="legend-key">2 Electricity</span>
+                                                <span class="legend-key">3 Waste</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="legend-step">
+                                        <div class="legend-num">4</div>
+                                        <div>
+                                            Select action
+                                            <div class="legend-keys">
+                                                <span class="legend-key">1 Notifications</span>
+                                                <span class="legend-key">2 Complaint</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="phone-footer">Powered by Twilio Voice SDK</div>
+                        </div>
+
+                        <!-- Virtual Bottom Home bar indicator -->
+                        <div class="home-indicator-container">
+                            <div class="home-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let device, activeCall, deviceReady = false;
+
+        // Mock Time update
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('mockTime').innerText = `${hours}:${minutes}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function setStatus(msg, icon) {
+            document.getElementById('statusIcon').innerText = icon;
+            document.getElementById('status').innerText = msg;
+        }
+
+        async function makeCall() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) await new AudioCtx().resume();
+
+                if (!deviceReady) {
+                    setStatus('Setting up device...', '⚙️');
+                    const res = await fetch('/token');
+                    const data = await res.json();
+                    device = new Twilio.Device(data.token, {
+                        codecPreferences: ['opus', 'pcmu'],
+                        enableRingingState: true
+                    });
+                    device.on('error', e => setStatus('Device error: ' + e.message, '❌'));
+                    await device.register();
+                    deviceReady = true;
+                }
+
+                setStatus('Connecting call...', '🔄');
+                document.getElementById('dialDisplay').innerText = '';
+
+                activeCall = await device.connect({ params: { To: 'eco-awaaz-ivr' } });
+
+                activeCall.on('accept', () => {
+                    setStatus('Connected — enter digits or speak.', '✅');
+                    document.getElementById('callBtn').style.display = 'none';
+                    document.getElementById('hangupBtn').style.display = 'flex';
+                    document.getElementById('waveContainer').style.display = 'flex';
+                    document.getElementById('statusBar').classList.add('active');
+                });
+
+                activeCall.on('disconnect', () => {
+                    setStatus('Call ended.', '📡');
+                    document.getElementById('callBtn').style.display = 'flex';
+                    document.getElementById('hangupBtn').style.display = 'none';
+                    document.getElementById('dialDisplay').innerText = '';
+                    document.getElementById('waveContainer').style.display = 'none';
+                    document.getElementById('statusBar').classList.remove('active');
+                });
+
+                activeCall.on('error', e => {
+                    setStatus('Error: ' + e.message, '❌');
+                    document.getElementById('waveContainer').style.display = 'none';
+                    document.getElementById('statusBar').classList.remove('active');
+                });
+
+            } catch (err) {
+                setStatus('Error: ' + err.message, '❌');
+                console.error(err);
+            }
+        }
+
+        function hangUp() {
+            if (activeCall) activeCall.disconnect();
+        }
+
+        function sendDigit(digit) {
+            if (activeCall) {
+                activeCall.sendDigits(digit);
+                setStatus('Sent DTMF: ' + digit, '🔢');
+                document.getElementById('dialDisplay').innerText += digit;
+            } else {
+                setStatus('Must start call first.', '⚠️');
+            }
+        }
+    </script>
+</body>
+
+</html>
